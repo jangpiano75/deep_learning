@@ -56,9 +56,11 @@ print(x)
 from matplotlib.pylab import plt
 
 #graph 1 (2 dimensional graph)
-plt.plot( [-5, 5], [0,0], '-b')    #x axis (color = blue)
-plt.plot( [0,0], [-5, 5], '-b')    #y axis (color = blue)
-plt.plot(x_process[:,0], x_process[:,1], '.-')  # x_process 의 첫번째 열, 두번째 열 circle marker
+plt.plot( [-5, 5], [0,0], '-b')    #color = blue
+plt.plot( [0,0], [-5, 5], '-b')    #color = blue
+
+plt.plot(x_process[:,0], x_process[:,1], '.-') #수렴과정
+plt.plot(0, 0, '+' , color = "red") #극소점
 
 plt.xlabel("X0")
 plt.ylabel("X1")
@@ -74,16 +76,13 @@ Z = function_1(np.array([X, Y]))
 idx = 1
 plt.subplot(2, 2, idx)
 idx += 1
-plt.plot( x_process[:,0], x_process[:,1], '.-', color="blue")
+plt.plot( x_process[:,0], x_process[:,1], '.-', color="blue") #수렴과정
 plt.contour(X, Y, Z)
 
 plt.ylim(-5, 5)
 plt.xlim(-5, 5)
 
 plt.plot(0, 0, '+', color = "red")  #극소점
-plt.title("GD")
-plt.xlabel("x")
-plt.ylabel("y")
 plt.show()
 
 
@@ -98,13 +97,13 @@ z = function_1(np.array([X, Y]))
 
 fig = plt.figure()
 ax = fig.gca(projection ="3d")
-surf = ax.plot_wireframe(x, y, z , color='grey', alpha = 0.2)
-ax.plot3D(x_process[:,0], x_process[:,1], color = "blue", alpha = 0.7)
-ax.plot3D(0, 0, '+', color = "red")
+surf = ax.plot_wireframe(x, y, z , color='grey', alpha = 0.2)    #수렴과정 (불투명도 = 0.2) 
+ax.plot3D(x_process[:,0], x_process[:,1], color = "blue", alpha = 0.7) #수렴과정 (불투명도 = 0.7)
+ax.plot3D(0, 0, '+', color = "red") #극소점 
 plt.show()
 
 
-#gradient descent to find the parameter
+#gradient descent to find the parameters
 X_1 = np.random.rand(100)
 X_2 = np.random.rand(100)
 X_3 = np.random.rand(100)

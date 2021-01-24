@@ -104,7 +104,7 @@ ax.plot3D(0, 0, '+', color = "red")
 plt.show()
 
 
-#gradient descent to find the parameter
+#gradient descent to find the parameters
 X_1 = np.random.rand(100)
 X_2 = np.random.rand(100)
 X_3 = np.random.rand(100)

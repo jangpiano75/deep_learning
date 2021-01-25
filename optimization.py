@@ -102,7 +102,7 @@ class Adam:
 
 #Test
 def function_1(x):
-    return x[0]**2/20 +x[1]**2
+    return x[0]**2/15 +x[1]**2
 
 
 
@@ -212,8 +212,8 @@ for key in optimizers:
 
     x, x_process = process(function_1, init_x=np.array([-7.0, 2.0]), I=30)
 
-    X = np.arange(-10, 10, 0.01)
-    Y = np.arange(-10, 10, 0.01)
+    X = np.arange(-5, 5, 0.01)
+    Y = np.arange(-5, 5, 0.01)
 
     X, Y = np.meshgrid(X, Y)
     Z = function_1(np.array([X, Y]))
@@ -222,7 +222,7 @@ for key in optimizers:
     ax = fig.add_subplot(2, 3, idx, projection='3d') #make each subplot by making 6 subplots in total.
 
     surf = ax.plot_wireframe(X, Y, Z, color='grey', alpha=0.1) #add axis to each plot
-    ax.plot3D(x_process[:, 0], x_process[:, 1], color="blue", alpha=1) #draw the graph (how the optimization function works)
+    ax.plot3D(x_process[:, 0], x_process[:, 1], np.array([function_1(x_process[i, :]) for i in range(len(x_process))]), color="blue") #draw the graph (how the optimization function works)
     ax.plot3D(0, 0, '+', color="red")  #the local minimum point
     idx +=1
     plt.title(key)

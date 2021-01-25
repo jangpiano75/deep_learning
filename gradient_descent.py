@@ -98,7 +98,7 @@ z = function_1(np.array([X, Y]))
 fig = plt.figure()
 ax = fig.gca(projection ="3d")
 surf = ax.plot_wireframe(x, y, z , color='grey', alpha = 0.2)    #수렴과정 (불투명도 = 0.2) 
-ax.plot3D(x_process[:,0], x_process[:,1], color = "blue", alpha = 0.7) #수렴과정 (불투명도 = 0.7)
+ax.plot3D(x_process[:,0], x_process[:,1],np.array([function_1(x_process[i,:]) for i in range(len(x_process))]) , color = "blue", alpha = 0.7) #수렴과정 (불투명도 = 0.7)
 ax.plot3D(0, 0, '+', color = "red") #극소점 
 plt.show()
 

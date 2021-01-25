@@ -1,261 +1,233 @@
-#gradient descent
-
-# coding: utf-8
 import numpy as np
-import matplotlib.pylab as plt
-import pandas as pd
 
-
-#gradient descent
+#gradient(differentiation)
 def gradient(f, x):
+    h = 1e-4  # 0.0001
+    grad = np.zeros_like(x)  # x와 형상이 같은 배열을 생성
 
-    h = 0.0001
-    grad = np.zeros_like(x)
+    for idx in range(x.size):
+        tmp_val = x[idx]
 
-    for i in range(x.size):
-        temp_val = x[i]
-        x[i] = temp_val +h
-        f1 = f(x)
+        # f(x+h)
+        x[idx] = tmp_val + h
+        fxh1 = f(x)
 
-        x[i] = temp_val -h
-        f2 = f(x)
+        # f(x-h) 계산
+        x[idx] = tmp_val - h
+        fxh2 = f(x)
 
-        grad[i] = (f1 - f2)/(2*h)
-        x[i] = temp_val
+        grad[idx] = (fxh1 - fxh2) / (2 * h)
+        x[idx] = tmp_val   #값 복원
 
     return grad
 
-def gradient_descent(f, init_x, L = 0.01, I = 100):
 
-    x= init_x
-
-    for i in range(I):
-        grad = gradient(f, x)
-        x = x - L*grad
-    return x
-
-#gradient_descent 예시
-
-def function_2(x):
-    return x[0]**2 + x[1]**2
-
-x = np.array([-3.0, 4.0])
-
-print(gradient_descent(function_2, x, L = 0.1))
-
-#시각화
-
-def gradient_descent_process(f, x, L = 0.1, I = 100):
-    store_x = []
-    for i in range(I):
-
-        store_x.append(x)
-
-        grad = gradient(f, x)
-        x -= L*grad
-
-    return x, np.array(store_x)
-
-print(gradient_descent_process(function_2, x, L = 0.1))
-
-
-
-
-'''
-plt.plot( [-5, 5], [0,0], '--b')
-plt.plot( [0,0], [-5, 5], '--b')
-plt.plot(x_history[:,0], x_history[:,1], 'o')
-
-plt.xlim(-3.5, 3.5)
-plt.ylim(-4.5, 4.5)
-plt.xlabel("X0")
-plt.ylabel("X1")
-plt.show()
-
+##Stochastic Gradient Descent
 
 class SGD:
-    """확률적 경사 하강법（Stochastic Gradient Descent）"""
-
-    def __init__(self, lr=0.01):
+    def __init__(self, lr = 0.01):
         self.lr = lr
 
-    def update(self, params, grads):
-        for key in params.keys():
-            params[key] -= self.lr * grads[key]
+    def update(self, x, f):
+            grads = gradient(f, x)
+            x -= self.lr * grads
 
 
 class Momentum:
-    """모멘텀 SGD"""
-
-    def __init__(self, lr=0.01, momentum=0.9):
+    def __init__(self, lr = 0.01, momentum = 0.9):
         self.lr = lr
         self.momentum = momentum
-        self.v = None
+        self.v = 0
 
-    def update(self, params, grads):
-        if self.v is None:
-            self.v = {}
-            for key, val in params.items():
-                self.v[key] = np.zeros_like(val)
-
-        for key in params.keys():
-            self.v[key] = self.momentum * self.v[key] - self.lr * grads[key]
-            params[key] += self.v[key]
+    def update(self, x, f):
+        grads = gradient(f, x)
+        self.v = self.momentum *self.v - self.lr * grads
+        x += self.v
 
 
-class Nesterov:
-    """Nesterov's Accelerated Gradient (http://arxiv.org/abs/1212.0901)"""
-
-    # NAG는 모멘텀에서 한 단계 발전한 방법이다. (http://newsight.tistory.com/224)
-
-    def __init__(self, lr=0.01, momentum=0.9):
+class NAG:
+    def __init__(self, lr= 0.01,momentum = 0.9 ):
         self.lr = lr
         self.momentum = momentum
-        self.v = None
+        self.v = 0
 
-    def update(self, params, grads):
-        if self.v is None:
-            self.v = {}
-            for key, val in params.items():
-                self.v[key] = np.zeros_like(val)
-
-        for key in params.keys():
-            self.v[key] *= self.momentum
-            self.v[key] -= self.lr * grads[key]
-            params[key] += self.momentum * self.momentum * self.v[key]
-            params[key] -= (1 + self.momentum) * self.lr * grads[key]
+    def update(self, x, f):
+        grads = gradient(f, x+self.momentum*self.v)
+        self.v = self.momentum*self.v - self.lr * grads
+        x += self.v
 
 
-class AdaGrad:
-    """AdaGrad"""
-
-    def __init__(self, lr=0.01):
+class Adagrad:   #1.5
+    def __init__(self, lr = 0.01):
         self.lr = lr
-        self.h = None
+        self.h = 0
 
-    def update(self, params, grads):
-        if self.h is None:
-            self.h = {}
-            for key, val in params.items():
-                self.h[key] = np.zeros_like(val)
-
-        for key in params.keys():
-            self.h[key] += grads[key] * grads[key]
-            params[key] -= self.lr * grads[key] / (np.sqrt(self.h[key]) + 1e-7)
+    def update(self, x, f):
+        grads = gradient(f, x)
+        self.h += grads*grads
+        x -= self.lr* np.sqrt(1/self.h) * grads
 
 
-class RMSprop:
-    """RMSprop"""
-
-    def __init__(self, lr=0.01, decay_rate=0.99):
+class RMSP:
+    def __init__(self, lr = 0.01, r = 0.8):
         self.lr = lr
-        self.decay_rate = decay_rate
-        self.h = None
+        self.r = r
+        self.h = 0
 
-    def update(self, params, grads):
-        if self.h is None:
-            self.h = {}
-            for key, val in params.items():
-                self.h[key] = np.zeros_like(val)
-
-        for key in params.keys():
-            self.h[key] *= self.decay_rate
-            self.h[key] += (1 - self.decay_rate) * grads[key] * grads[key]
-            params[key] -= self.lr * grads[key] / (np.sqrt(self.h[key]) + 1e-7)
+    def update(self, x, f):
+        grads = gradient(f, x)
+        self.h = self.r*self.h + (1-self.r)*grads*grads
+        x -= self.lr*np.sqrt(1/(self.h + 1e-7)) * grads
 
 
 class Adam:
-    """Adam (http://arxiv.org/abs/1412.6980v8)"""
-
-    def __init__(self, lr=0.001, beta1=0.9, beta2=0.999):
+    def __init__(self, lr = 0.01, B1 = 0.9 , B2 = 0.999 ):
         self.lr = lr
-        self.beta1 = beta1
-        self.beta2 = beta2
+        self.B1 = B1
+        self.B2 = B2
+        self.m = 0
+        self.v = 0
         self.iter = 0
-        self.m = None
-        self.v = None
 
-    def update(self, params, grads):
-        if self.m is None:
-            self.m, self.v = {}, {}
-            for key, val in params.items():
-                self.m[key] = np.zeros_like(val)
-                self.v[key] = np.zeros_like(val)
 
+    def update(self, x, f):
         self.iter += 1
-        lr_t = self.lr * np.sqrt(1.0 - self.beta2 ** self.iter) / (1.0 - self.beta1 ** self.iter)
+        grads = gradient(f, x)
+        self.m = self.B1*self.m + (1 - self.B1)*grads
+        self.v = self.B2*self.v +(1 - self.B2)*grads*grads
 
-        for key in params.keys():
-            # self.m[key] = self.beta1*self.m[key] + (1-self.beta1)*grads[key]
-            # self.v[key] = self.beta2*self.v[key] + (1-self.beta2)*(grads[key]**2)
-            self.m[key] += (1 - self.beta1) * (grads[key] - self.m[key])
-            self.v[key] += (1 - self.beta2) * (grads[key] ** 2 - self.v[key])
+        revised_lr = self.lr * np.sqrt(1-self.B2**self.iter) / (1- self.B1**self.iter)
+        x -= revised_lr*self.m / (np.sqrt(self.v+1e-7))
 
-            params[key] -= lr_t * self.m[key] / (np.sqrt(self.v[key]) + 1e-7)
 
-            # unbias_m += (1 - self.beta1) * (grads[key] - self.m[key]) # correct bias
-            # unbisa_b += (1 - self.beta2) * (grads[key]*grads[key] - self.v[key]) # correct bias
-            # params[key] += self.lr * unbias_m / (np.sqrt(unbisa_b) + 1e-7)
+#Test
+def function_1(x):
+    return x[0]**2/20 +x[1]**2
+
+
 
 from collections import OrderedDict
-def f(x, y):
-    return x ** 2 / 20.0 + y ** 2
 
-
-def df(x, y):
-    return x / 10.0, 2.0 * y
-
-
-init_pos = (-7.0, 2.0)
-params = {}
-params['x'], params['y'] = init_pos[0], init_pos[1]
-grads = {}
-grads['x'], grads['y'] = 0, 0
 
 optimizers = OrderedDict()
-optimizers["SGD"] = SGD(lr=0.95)
-optimizers["Momentum"] = Momentum(lr=0.1)
-optimizers["AdaGrad"] = AdaGrad(lr=1.5)
+optimizers["SGD"] = SGD(lr=0.9)
+optimizers["Momentum"] = Momentum(lr=0.07)
+optimizers["NAG"] = NAG(lr = 0.05)
+optimizers["AdaGrad"] = Adagrad(lr=1.5)
+optimizers["RMsp"] = RMSP(lr = 0.5, r = 0.8)
 optimizers["Adam"] = Adam(lr=0.3)
 
+#graph comparision _1 (contour)
 idx = 1
 
 for key in optimizers:
     optimizer = optimizers[key]
-    x_history = []
-    y_history = []
-    params['x'], params['y'] = init_pos[0], init_pos[1]
 
-    for i in range(30):
-        x_history.append(params['x'])
-        y_history.append(params['y'])
+    def process(f, init_x, I=100):
+        x = init_x
+        process = []
 
-        grads['x'], grads['y'] = df(params['x'], params['y'])
-        optimizer.update(params, grads)
+        for i in range(I):
+            process.append(x.copy())
+            optimizer.update(x, f)
 
-    x = np.arange(-10, 10, 0.01)
-    y = np.arange(-5, 5, 0.01)
+        return x, np.array(process)
 
-    X, Y = np.meshgrid(x, y)
-    Z = f(X, Y)
+
+    x, x_process = process(function_1, init_x=np.array([-7.0, 2.0]), I=30)
+
+    from matplotlib.pylab import plt
+
+    X = np.arange(-10, 10, 0.01)
+    Y = np.arange(-10, 10, 0.01)
+
+    X, Y = np.meshgrid(X, Y)
+    Z = function_1(np.array([X, Y]))
 
     # 외곽선 단순화
-    mask = Z > 7
+    mask = Z > 10
     Z[mask] = 0
 
-    # 그래프 그리기
-    plt.subplot(2, 2, idx)
+    plt.subplot(2, 3, idx)
     idx += 1
-    plt.plot(x_history, y_history, 'o-', color="red")
+    plt.plot(x_process[:, 0], x_process[:, 1], '.-', color="blue")
     plt.contour(X, Y, Z)
+
     plt.ylim(-10, 10)
     plt.xlim(-10, 10)
-    plt.plot(0, 0, '+')
-    # colorbar()
-    # spring()
+
+    plt.plot(0, 0, '+', color="red")  # 극소점
     plt.title(key)
-    plt.xlabel("x")
-    plt.ylabel("y")
 
 plt.show()
-'''
+
+
+#graph comparision _2 (2 dimensional)
+
+idx = 1
+for key in optimizers:
+    optimizer = optimizers[key]
+
+    def process(f, init_x, I=100):
+        x = init_x
+        process = []
+
+        for i in range(I):
+            process.append(x.copy())
+            optimizer.update(x, f)
+
+        return x, np.array(process)
+
+
+    plt.subplot(2, 3, idx)
+    idx += 1
+
+    x, x_process = process(function_1, init_x=np.array([-7.0, 2.0]), I=30)
+
+    plt.plot([-10, 10], [0, 0], '-b')  # x axis (color = blue)
+    plt.plot([0, 0], [-10, 10], '-b')  # y axis (color = blue)
+    plt.plot(x_process[:, 0], x_process[:, 1], '.-')  # x_process 의 첫번째 열, 두번째 열 circle marker
+    plt.plot(0, 0, '+', color="red")
+
+    plt.title(key)
+plt.show()
+
+
+#graph comparision _3 (3 dimensional)
+
+idx = 1
+fig = plt.figure()
+for key in optimizers:
+    optimizer = optimizers[key]
+
+    def process(f, init_x, I=100):
+        x = init_x
+        process = []
+
+        for i in range(I):
+            process.append(x.copy())
+            optimizer.update(x, f)
+
+        return x, np.array(process)
+
+    x, x_process = process(function_1, init_x=np.array([-7.0, 2.0]), I=30)
+
+    X = np.arange(-10, 10, 0.01)
+    Y = np.arange(-10, 10, 0.01)
+
+    X, Y = np.meshgrid(X, Y)
+    Z = function_1(np.array([X, Y]))
+
+
+    ax = fig.add_subplot(2, 3, idx, projection='3d') #make each subplot by making 6 subplots in total.
+
+    surf = ax.plot_wireframe(X, Y, Z, color='grey', alpha=0.1) #add axis to each plot
+    ax.plot3D(x_process[:, 0], x_process[:, 1], color="blue", alpha=1) #draw the graph (how the optimization function works)
+    ax.plot3D(0, 0, '+', color="red")  #the local minimum point
+    idx +=1
+    plt.title(key)
+
+plt.show()
+
+
+
